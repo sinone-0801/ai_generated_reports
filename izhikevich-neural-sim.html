@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Izhikevichニューラルネットワークシミュレーター</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #4a9eff;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-shadow: 0 0 20px rgba(74, 158, 255, 0.5);
+        }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .canvas-container {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        canvas {
+            border: 1px solid #333;
+            border-radius: 5px;
+            display: block;
+            margin: 0 auto;
+            cursor: crosshair;
+        }
+        .controls {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #252525;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .control-group h3 {
+            margin-top: 0;
+            color: #4a9eff;
+            font-size: 1.1em;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #b0b0b0;
+            font-size: 0.9em;
+        }
+        select, input[type="range"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #4a9eff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5aafff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(74, 158, 255, 0.3);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .danger {
+            background: #ff4a4a;
+        }
+        .danger:hover {
+            background: #ff5a5a;
+        }
+        .info-panel {
+            background: #1a1a1a;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .neuron-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .neuron-card {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            transition: all 0.3s;
+        }
+        .neuron-card:hover {
+            border-color: #4a9eff;
+            box-shadow: 0 0 15px rgba(74, 158, 255, 0.2);
+        }
+        .neuron-card h4 {
+            margin: 0 0 10px 0;
+            color: #4a9eff;
+        }
+        .neuron-card p {
+            margin: 5px 0;
+            font-size: 0.9em;
+            color: #b0b0b0;
+        }
+        .spike-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            margin-left: 10px;
+            transition: all 0.1s;
+        }
+        .spike-indicator.active {
+            background: #ff4a4a;
+            box-shadow: 0 0 10px #ff4a4a;
+        }
+        .legend {
+            margin-top: 15px;
+            padding: 15px;
+            background: #252525;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .stat-item {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            color: #4a9eff;
+            font-weight: bold;
+        }
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .mode-button {
+            flex: 1;
+            padding: 8px;
+            background: #333;
+            border: 2px solid #444;
+            color: #b0b0b0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .mode-button.active {
+            background: #4a9eff;
+            border-color: #4a9eff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Izhikevichニューラルネットワークシミュレーター</h1>
+        
+        <div class="main-grid">
+            <div class="canvas-container">
+                <canvas id="networkCanvas" width="800" height="600"></canvas>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3>編集モード</h3>
+                    <div class="mode-selector">
+                        <button class="mode-button active" data-mode="neuron">ニューロン</button>
+                        <button class="mode-button" data-mode="synapse">シナプス</button>
+                        <button class="mode-button" data-mode="delete">削除</button>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3>ニューロンタイプ</h3>
+                    <select id="neuronType">
+                        <option value="RS">Regular Spiking (RS)</option>
+                        <option value="IB">Intrinsically Bursting (IB)</option>
+                        <option value="FS">Fast Spiking (FS)</option>
+                        <option value="LTS">Low-Threshold Spiking (LTS)</option>
+                        <option value="CH">Chattering (CH)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <h3>シナプスタイプ</h3>
+                    <select id="synapseType">
+                        <option value="excitatory">興奮性 (Excitatory)</option>
+                        <option value="inhibitory">抑制性 (Inhibitory)</option>
+                    </select>
+                    <label>シナプス強度</label>
+                    <input type="range" id="synapseStrength" min="0" max="20" value="10" step="0.5">
+                    <span id="strengthValue">10</span>
+                </div>
+
+                <div class="control-group">
+                    <h3>外部電流</h3>
+                    <label>電流強度 (pA)</label>
+                    <input type="range" id="currentStrength" min="0" max="50" value="10" step="1">
+                    <span id="currentValue">10</span>
+                </div>
+
+                <div class="control-group">
+                    <h3>シミュレーション制御</h3>
+                    <button id="startBtn">▶️ 開始</button>
+                    <button id="pauseBtn">⏸️ 一時停止</button>
+                    <button id="resetBtn" class="danger">🔄 リセット</button>
+                </div>
+
+                <div class="legend">
+                    <h4>凡例</h4>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #00ff00;"></div>
+                        <span>興奮性シナプス</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #ff00ff;"></div>
+                        <span>抑制性シナプス</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>ニューロン情報</h3>
+            <div id="neuronInfo" class="neuron-info"></div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div>総ニューロン数</div>
+                    <div class="stat-value" id="totalNeurons">0</div>
+                </div>
+                <div class="stat-item">
+                    <div>総シナプス数</div>
+                    <div class="stat-value" id="totalSynapses">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Izhikevichモデルのパラメータ定義
+        const neuronParams = {
+            RS: { a: 0.02, b: 0.2, c: -65, d: 8, name: "Regular Spiking" },
+            IB: { a: 0.02, b: 0.2, c: -55, d: 4, name: "Intrinsically Bursting" },
+            FS: { a: 0.1, b: 0.2, c: -65, d: 2, name: "Fast Spiking" },
+            LTS: { a: 0.02, b: 0.25, c: -65, d: 2, name: "Low-Threshold Spiking" },
+            CH: { a: 0.02, b: 0.2, c: -50, d: 2, name: "Chattering" }
+        };
+
+        class Neuron {
+            constructor(x, y, type) {
+                this.x = x;
+                this.y = y;
+                this.type = type;
+                this.params = neuronParams[type];
+                this.v = -65;  // 膜電位
+                this.u = this.params.b * this.v;  // 回復変数
+                this.I = 0;  // 入力電流
+                this.spiked = false;
+                this.spikeHistory = [];
+                this.id = Date.now() + Math.random();
+            }
+
+            update(dt, externalCurrent) {
+                // Izhikevichモデルの数値積分
+                const dv = 0.04 * this.v * this.v + 5 * this.v + 140 - this.u + this.I + externalCurrent;
+                const du = this.params.a * (this.params.b * this.v - this.u);
+                
+                this.v += dv * dt;
+                this.u += du * dt;
+                
+                // スパイク検出とリセット
+                if (this.v >= 30) {
+                    this.v = this.params.c;
+                    this.u += this.params.d;
+                    this.spiked = true;
+                    this.spikeHistory.push(Date.now());
+                    // 古いスパイク履歴を削除
+                    const now = Date.now();
+                    this.spikeHistory = this.spikeHistory.filter(t => now - t < 5000);
+                } else {
+                    this.spiked = false;
+                }
+                
+                // シナプス電流の減衰
+                this.I *= 0.95;
+            }
+
+            receiveInput(current) {
+                this.I += current;
+            }
+
+            getFireRate() {
+                // 過去5秒間の発火率を計算
+                const now = Date.now();
+                const recentSpikes = this.spikeHistory.filter(t => now - t < 5000);
+                return recentSpikes.length / 5;  // Hz
+            }
+        }
+
+        class Synapse {
+            constructor(preNeuron, postNeuron, type, strength) {
+                this.pre = preNeuron;
+                this.post = postNeuron;
+                this.type = type;  // 'excitatory' or 'inhibitory'
+                this.strength = strength;
+                this.delay = 1;  // シナプス遅延 (ms)
+                this.id = Date.now() + Math.random();
+            }
+
+            transmit() {
+                if (this.pre.spiked) {
+                    const current = this.type === 'excitatory' ? this.strength : -this.strength;
+                    setTimeout(() => {
+                        this.post.receiveInput(current);
+                    }, this.delay);
+                }
+            }
+        }
+
+        class NeuralNetwork {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.neurons = [];
+                this.synapses = [];
+                this.running = false;
+                this.editMode = 'neuron';
+                this.selectedNeuron = null;
+                this.dt = 0.5;  // 時間ステップ (ms)
+                
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupEventListeners() {
+                // モード切替
+                document.querySelectorAll('.mode-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.mode-button').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.editMode = e.target.dataset.mode;
+                        this.selectedNeuron = null;
+                    });
+                });
+
+                // キャンバスクリック
+                this.canvas.addEventListener('click', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    if (this.editMode === 'neuron') {
+                        const type = document.getElementById('neuronType').value;
+                        this.addNeuron(x, y, type);
+                    } else if (this.editMode === 'synapse') {
+                        const clickedNeuron = this.getNeuronAt(x, y);
+                        if (clickedNeuron) {
+                            if (!this.selectedNeuron) {
+                                this.selectedNeuron = clickedNeuron;
+                            } else if (clickedNeuron !== this.selectedNeuron) {
+                                const type = document.getElementById('synapseType').value;
+                                const strength = parseFloat(document.getElementById('synapseStrength').value);
+                                this.addSynapse(this.selectedNeuron, clickedNeuron, type, strength);
+                                this.selectedNeuron = null;
+                            }
+                        }
+                    } else if (this.editMode === 'delete') {
+                        const neuron = this.getNeuronAt(x, y);
+                        if (neuron) {
+                            this.removeNeuron(neuron);
+                        } else {
+                            const synapse = this.getSynapseAt(x, y);
+                            if (synapse) {
+                                this.removeSynapse(synapse);
+                            }
+                        }
+                    }
+                    
+                    this.updateStats();
+                });
+
+                // コントロール
+                document.getElementById('startBtn').addEventListener('click', () => this.start());
+                document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
+                document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+
+                // スライダー
+                document.getElementById('synapseStrength').addEventListener('input', (e) => {
+                    document.getElementById('strengthValue').textContent = e.target.value;
+                });
+                document.getElementById('currentStrength').addEventListener('input', (e) => {
+                    document.getElementById('currentValue').textContent = e.target.value;
+                });
+            }
+
+            addNeuron(x, y, type) {
+                this.neurons.push(new Neuron(x, y, type));
+            }
+
+            addSynapse(pre, post, type, strength) {
+                // 重複チェック
+                const exists = this.synapses.some(s => s.pre === pre && s.post === post);
+                if (!exists) {
+                    this.synapses.push(new Synapse(pre, post, type, strength));
+                }
+            }
+
+            removeNeuron(neuron) {
+                // 関連するシナプスも削除
+                this.synapses = this.synapses.filter(s => s.pre !== neuron && s.post !== neuron);
+                this.neurons = this.neurons.filter(n => n !== neuron);
+            }
+
+            removeSynapse(synapse) {
+                this.synapses = this.synapses.filter(s => s !== synapse);
+            }
+
+            getNeuronAt(x, y) {
+                const radius = 20;
+                return this.neurons.find(n => {
+                    const dx = n.x - x;
+                    const dy = n.y - y;
+                    return dx * dx + dy * dy <= radius * radius;
+                });
+            }
+
+            getSynapseAt(x, y) {
+                const threshold = 10;
+                return this.synapses.find(s => {
+                    const dist = this.pointToLineDistance(x, y, s.pre.x, s.pre.y, s.post.x, s.post.y);
+                    return dist < threshold;
+                });
+            }
+
+            pointToLineDistance(px, py, x1, y1, x2, y2) {
+                const A = px - x1;
+                const B = py - y1;
+                const C = x2 - x1;
+                const D = y2 - y1;
+                
+                const dot = A * C + B * D;
+                const lenSq = C * C + D * D;
+                let param = -1;
+                
+                if (lenSq !== 0) param = dot / lenSq;
+                
+                let xx, yy;
+                
+                if (param < 0) {
+                    xx = x1;
+                    yy = y1;
+                } else if (param > 1) {
+                    xx = x2;
+                    yy = y2;
+                } else {
+                    xx = x1 + param * C;
+                    yy = y1 + param * D;
+                }
+                
+                const dx = px - xx;
+                const dy = py - yy;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+
+            update() {
+                if (!this.running) return;
+                
+                const externalCurrent = parseFloat(document.getElementById('currentStrength').value);
+                
+                // ニューロンの更新
+                this.neurons.forEach(neuron => {
+                    neuron.update(this.dt, externalCurrent);
+                });
+                
+                // シナプス伝達
+                this.synapses.forEach(synapse => {
+                    synapse.transmit();
+                });
+                
+                this.updateNeuronInfo();
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#0a0a0a';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // グリッド描画
+                this.drawGrid();
+                
+                // シナプス描画
+                this.synapses.forEach(synapse => {
+                    this.ctx.save();
+                    
+                    // シナプスの色（Hue）
+                    const hue = synapse.type === 'excitatory' ? 120 : 300;  // 緑:興奮性、紫:抑制性
+                    this.ctx.strokeStyle = `hsl(${hue}, 70%, 50%)`;
+                    this.ctx.lineWidth = 2;
+                    
+                    // 矢印の描画
+                    this.drawArrow(synapse.pre.x, synapse.pre.y, synapse.post.x, synapse.post.y);
+                    
+                    this.ctx.restore();
+                });
+                
+                // ニューロン描画
+                this.neurons.forEach(neuron => {
+                    this.ctx.save();
+                    
+                    // 膜電位による明度調整
+                    const brightness = Math.max(0, Math.min(100, (neuron.v + 80) / 110 * 100));
+                    const hue = neuron.type === 'FS' ? 200 : 220;  // FSニューロンは少し違う色相
+                    
+                    // スパイク時の効果
+                    if (neuron.spiked) {
+                        this.ctx.shadowBlur = 30;
+                        this.ctx.shadowColor = '#ff4a4a';
+                    }
+                    
+                    this.ctx.fillStyle = `hsl(${hue}, 70%, ${brightness}%)`;
+                    this.ctx.strokeStyle = this.selectedNeuron === neuron ? '#4a9eff' : '#444';
+                    this.ctx.lineWidth = this.selectedNeuron === neuron ? 3 : 2;
+                    
+                    this.ctx.beginPath();
+                    this.ctx.arc(neuron.x, neuron.y, 20, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.stroke();
+                    
+                    // ニューロンタイプ表示
+                    this.ctx.fillStyle = brightness > 50 ? '#000' : '#fff';
+                    this.ctx.font = 'bold 12px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(neuron.type, neuron.x, neuron.y);
+                    
+                    this.ctx.restore();
+                });
+            }
+
+            drawGrid() {
+                this.ctx.strokeStyle = '#1a1a1a';
+                this.ctx.lineWidth = 1;
+                
+                for (let x = 0; x < this.canvas.width; x += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.canvas.height);
+                    this.ctx.stroke();
+                }
+                
+                for (let y = 0; y < this.canvas.height; y += 50) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, y);
+                    this.ctx.lineTo(this.canvas.width, y);
+                    this.ctx.stroke();
+                }
+            }
+
+            drawArrow(x1, y1, x2, y2) {
+                const dx = x2 - x1;
+                const dy = y2 - y1;
+                const angle = Math.atan2(dy, dx);
+                const length = Math.sqrt(dx * dx + dy * dy);
+                
+                // 矢印をニューロンの境界で止める
+                const startOffset = 20;
+                const endOffset = 20;
+                const adjustedLength = length - startOffset - endOffset;
+                
+                const startX = x1 + Math.cos(angle) * startOffset;
+                const startY = y1 + Math.sin(angle) * startOffset;
+                const endX = startX + Math.cos(angle) * adjustedLength;
+                const endY = startY + Math.sin(angle) * adjustedLength;
+                
+                // 線を描画
+                this.ctx.beginPath();
+                this.ctx.moveTo(startX, startY);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.stroke();
+                
+                // 矢印の頭を描画
+                const arrowSize = 10;
+                this.ctx.beginPath();
+                this.ctx.moveTo(endX, endY);
+                this.ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle - Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle - Math.PI / 6)
+                );
+                this.ctx.moveTo(endX, endY);
+                this.ctx.lineTo(
+                    endX - arrowSize * Math.cos(angle + Math.PI / 6),
+                    endY - arrowSize * Math.sin(angle + Math.PI / 6)
+                );
+                this.ctx.stroke();
+            }
+
+            updateNeuronInfo() {
+                const infoDiv = document.getElementById('neuronInfo');
+                infoDiv.innerHTML = '';
+                
+                this.neurons.forEach((neuron, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'neuron-card';
+                    card.innerHTML = `
+                        <h4>ニューロン ${index + 1} (${neuron.type})</h4>
+                        <p>膜電位: ${neuron.v.toFixed(1)} mV</p>
+                        <p>回復変数 u: ${neuron.u.toFixed(1)}</p>
+                        <p>発火率: ${neuron.getFireRate().toFixed(1)} Hz
+                            <span class="spike-indicator ${neuron.spiked ? 'active' : ''}"></span>
+                        </p>
+                    `;
+                    infoDiv.appendChild(card);
+                });
+            }
+
+            updateStats() {
+                document.getElementById('totalNeurons').textContent = this.neurons.length;
+                document.getElementById('totalSynapses').textContent = this.synapses.length;
+            }
+
+            animate() {
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.animate());
+            }
+
+            start() {
+                this.running = true;
+            }
+
+            pause() {
+                this.running = false;
+            }
+
+            reset() {
+                this.neurons = [];
+                this.synapses = [];
+                this.selectedNeuron = null;
+                this.running = false;
+                this.updateStats();
+                document.getElementById('neuronInfo').innerHTML = '';
+            }
+        }
+
+        // 初期化
+        const canvas = document.getElementById('networkCanvas');
+        const network = new NeuralNetwork(canvas);
+
+        // デモネットワークの作成
+        function createDemoNetwork() {
+            // 中央に円形配置
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 150;
+            const types = ['RS', 'IB', 'FS', 'LTS', 'CH'];
+            
+            const neurons = [];
+            for (let i = 0; i < 5; i++) {
+                const angle = (i / 5) * Math.PI * 2;
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+                network.addNeuron(x, y, types[i]);
+                neurons.push(network.neurons[network.neurons.length - 1]);
+            }
+            
+            // ランダムなシナプス結合
+            for (let i = 0; i < neurons.length; i++) {
+                for (let j = 0; j < neurons.length; j++) {
+                    if (i !== j && Math.random() < 0.3) {
+                        const type = Math.random() < 0.7 ? 'excitatory' : 'inhibitory';
+                        const strength = 5 + Math.random() * 10;
+                        network.addSynapse(neurons[i], neurons[j], type, strength);
+                    }
+                }
+            }
+            
+            network.updateStats();
+        }
+
+        // 初期デモネットワーク
+        createDemoNetwork();
+    </script>
+</body>
+</html>
