@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5×5戦略ゲーム - 拠点制圧バトル</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-status {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .player-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .player-info.active {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .player-info h2 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        .player1 .player-indicator {
+            background: #ff6b6b;
+        }
+
+        .player2 .player-indicator {
+            background: #4ecdc4;
+        }
+
+        .resource-display {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        .territory-count {
+            font-size: 1.2em;
+            color: #ffd93d;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 100px);
+            grid-template-rows: repeat(5, 100px);
+            gap: 5px;
+            margin: 0 auto 30px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .cell {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .cell:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .cell.territory-1 {
+            background: rgba(255, 107, 107, 0.3);
+            border-color: #ff6b6b;
+        }
+
+        .cell.territory-2 {
+            background: rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
+        }
+
+        .cell.base {
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.1) 10px,
+                rgba(255, 255, 255, 0.1) 20px
+            );
+        }
+
+        .cell.base-1 {
+            border: 3px solid #ff6b6b;
+            box-shadow: inset 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+
+        .cell.base-2 {
+            border: 3px solid #4ecdc4;
+            box-shadow: inset 0 0 20px rgba(78, 205, 196, 0.5);
+        }
+
+        .unit {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .unit-health {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: #ffd93d;
+            color: #000;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.5em;
+            font-weight: bold;
+        }
+
+        .cell-coords {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            font-size: 0.8em;
+            opacity: 0.5;
+        }
+
+        .cell.highlight-move {
+            background: rgba(100, 255, 100, 0.3) !important;
+            animation: pulse 1s infinite;
+        }
+
+        .cell.highlight-attack {
+            background: rgba(255, 100, 100, 0.3) !important;
+            animation: pulse 1s infinite;
+        }
+
+        .cell.highlight-place {
+            background: rgba(255, 255, 100, 0.3) !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .action-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .action-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .action-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-button.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 0 20px rgba(245, 87, 108, 0.5);
+        }
+
+        .unit-selector {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .unit-selector.show {
+            display: block;
+        }
+
+        .unit-options {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .unit-option {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .unit-option:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .unit-option.selected {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: #ffd93d;
+            box-shadow: 0 0 20px rgba(255, 217, 61, 0.5);
+        }
+
+        .unit-icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .unit-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .unit-move {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .health-selector {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .health-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 1.1em;
+            width: 150px;
+            text-align: center;
+            margin: 0 10px;
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .objective {
+            background: rgba(255, 217, 61, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ffd93d;
+        }
+
+        .current-action {
+            background: rgba(100, 255, 100, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #64ff64;
+        }
+
+        .message {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .victory-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 0 50px rgba(255, 217, 61, 0.8);
+        }
+
+        .victory-message h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ffd93d;
+        }
+
+        .new-game-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .new-game-button:hover {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(5, 60px);
+                grid-template-rows: repeat(5, 60px);
+            }
+            
+            .unit {
+                font-size: 1.8em;
+            }
+            
+            .game-title {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 class="game-title">⚔️ 拠点制圧バトル ⚔️</h1>
+        </div>
+
+        <div class="game-status">
+            <div class="player-info player1" id="player1-info">
+                <h2><span class="player-indicator"></span>プレイヤー1（北軍）</h2>
+                <div class="resource-display">💰 資源: <span id="player1-resources">3</span></div>
+                <div class="territory-count">🏰 領地: <span id="player1-territory">0</span>マス</div>
+            </div>
+            <div class="player-info player2" id="player2-info">
+                <h2><span class="player-indicator"></span>プレイヤー2（南軍）</h2>
+                <div class="resource-display">💰 資源: <span id="player2-resources">5</span></div>
+                <div class="territory-count">🏰 領地: <span id="player2-territory">0</span>マス</div>
+            </div>
+        </div>
+
+        <div class="game-board" id="gameBoard"></div>
+
+        <div class="action-panel">
+            <div class="action-buttons">
+                <button class="action-button" onclick="selectAction('farm')">🌾 農耕（領地×1資源獲得）</button>
+                <button class="action-button" onclick="selectAction('recruit')">⚔️ 造兵（1資源+追加=体力）</button>
+                <button class="action-button" onclick="selectAction('move')">🏃 移動/攻撃</button>
+            </div>
+
+            <div class="unit-selector" id="unitSelector">
+                <h3>ユニットを選択:</h3>
+                <div class="unit-options">
+                    <div class="unit-option" onclick="selectUnit('king')">
+                        <div class="unit-icon">♔</div>
+                        <div class="unit-name">キング</div>
+                        <div class="unit-move">8方向1マス</div>
+                    </div>
+                    <div class="unit-option" onclick="selectUnit('rook')">
+                        <div class="unit-icon">♜</div>
+                        <div class="unit-name">ルーク</div>
+                        <div class="unit-move">縦横1-2マス</div>
+                    </div>
+                    <div class="unit-option" onclick="selectUnit('bishop')">
+                        <div class="unit-icon">♗</div>
+                        <div class="unit-name">ビショップ</div>
+                        <div class="unit-move">斜め1-2マス</div>
+                    </div>
+                    <div class="unit-option" onclick="selectUnit('knight')">
+                        <div class="unit-icon">♞</div>
+                        <div class="unit-name">ナイト</div>
+                        <div class="unit-move">L字移動</div>
+                    </div>
+                </div>
+                <div class="health-selector">
+                    <label>体力（追加資源）: 
+                        <input type="number" id="healthInput" class="health-input" min="0" value="0">
+                    </label>
+                    <div style="margin-top: 10px; opacity: 0.8;">
+                        基本コスト1 + 追加資源 = 体力
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <div class="objective">
+                <h3>🎯 勝利条件</h3>
+                <p>敵の拠点（<span style="color: #4ecdc4;">■</span>南軍はA3 / <span style="color: #ff6b6b;">■</span>北軍はE3）に自軍ユニットを進入させる！</p>
+            </div>
+            <div class="current-action" id="currentAction">
+                <h3>📍 現在のアクション</h3>
+                <p id="actionDescription">アクションを選択してください</p>
+            </div>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <script>
+        // ゲーム状態
+        let gameState = {
+            currentPlayer: 1,
+            board: Array(5).fill(null).map(() => Array(5).fill(null)),
+            resources: { 1: 3, 2: 5 },
+            territories: Array(5).fill(null).map(() => Array(5).fill(0)),
+            selectedAction: null,
+            selectedUnit: null,
+            selectedUnitType: null,
+            selectedCell: null,
+            additionalHealth: 0,
+            bases: { 1: {row: 0, col: 2}, 2: {row: 4, col: 2} }
+        };
+
+        // ユニットアイコン
+        const unitIcons = {
+            king: '♔',
+            rook: '♜',
+            bishop: '♗',
+            knight: '♞'
+        };
+
+        // 初期化
+        function initGame() {
+            // 拠点を初期領地として設定
+            gameState.territories[0][1] = 1; // プレイヤー1の拠点（A3）
+            gameState.territories[0][2] = 1; // プレイヤー1の拠点（A3）
+            gameState.territories[0][3] = 1; // プレイヤー1の拠点（A3）
+            gameState.territories[1][2] = 1; // プレイヤー1の拠点（A3）
+            gameState.territories[4][1] = 2; // プレイヤー2の拠点（E3）
+            gameState.territories[4][2] = 2; // プレイヤー2の拠点（E3）
+            gameState.territories[4][3] = 2; // プレイヤー2の拠点（E3）
+            gameState.territories[3][2] = 2; // プレイヤー2の拠点（E3）
+            
+            createBoard();
+            updateDisplay();
+            showMessage("ゲーム開始！プレイヤー1の番です。拠点に兵を配置できます！");
+        }
+
+        // ボード作成
+        function createBoard() {
+            const board = document.getElementById('gameBoard');
+            board.innerHTML = '';
+            
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    
+                    // 座標表示
+                    const coords = document.createElement('div');
+                    coords.className = 'cell-coords';
+                    coords.textContent = `${String.fromCharCode(65 + row)}${col + 1}`;
+                    cell.appendChild(coords);
+                    
+                    // 拠点設定
+                    if (row === 0 && col === 2) {
+                        cell.classList.add('base', 'base-1');
+                    } else if (row === 4 && col === 2) {
+                        cell.classList.add('base', 'base-2');
+                    }
+                    
+                    cell.onclick = () => cellClick(row, col);
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        // セルクリック処理
+        function cellClick(row, col) {
+            if (!gameState.selectedAction) {
+                showMessage("まずアクションを選択してください！");
+                return;
+            }
+
+            if (gameState.selectedAction === 'recruit') {
+                if (!gameState.selectedUnitType) {
+                    showMessage("ユニットの種類を選択してください！");
+                    return;
+                }
+                placeUnit(row, col);
+            } else if (gameState.selectedAction === 'move') {
+                if (!gameState.selectedUnit) {
+                    selectUnitForMove(row, col);
+                } else {
+                    moveOrAttack(row, col);
+                }
+            }
+        }
+
+        // アクション選択
+        function selectAction(action) {
+            clearHighlights();
+            gameState.selectedAction = action;
+            gameState.selectedUnit = null;
+            gameState.selectedUnitType = null;
+            gameState.selectedCell = null;
+            
+            // アクションボタンの更新
+            document.querySelectorAll('.action-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // ユニット選択UI
+            const unitSelector = document.getElementById('unitSelector');
+            if (action === 'recruit') {
+                unitSelector.classList.add('show');
+                updateActionDescription("配置するユニットと体力を選択してください");
+                highlightPlaceableCells();
+            } else {
+                unitSelector.classList.remove('show');
+                
+                if (action === 'farm') {
+                    executeFarm();
+                } else if (action === 'move') {
+                    updateActionDescription("移動するユニットを選択してください");
+                }
+            }
+        }
+
+        // ユニット種別選択
+        function selectUnit(type) {
+            gameState.selectedUnitType = type;
+            
+            // UI更新
+            document.querySelectorAll('.unit-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.target.closest('.unit-option').classList.add('selected');
+            
+            updateActionDescription(`${type}を配置するマスを選択してください（コスト: 1+${document.getElementById('healthInput').value}資源）`);
+        }
+
+        // 農耕実行
+        function executeFarm() {
+            const territoryCount = countTerritory(gameState.currentPlayer);
+            const gained = territoryCount;
+            
+            if (gained === 0) {
+                showMessage("領地がありません！拠点も領地としてカウントされます。");
+                return;
+            }
+            
+            gameState.resources[gameState.currentPlayer] += gained;
+            
+            showMessage(`農耕実行！${gained}資源を獲得しました。（領地${territoryCount}マス）`);
+            updateActionDescription(`農耕完了：${gained}資源を獲得`);
+            endTurn();
+        }
+
+        // ユニット配置
+        function placeUnit(row, col) {
+            const player = gameState.currentPlayer;
+            const additionalHealth = parseInt(document.getElementById('healthInput').value) || 0;
+            const totalCost = 1 + additionalHealth;
+            
+            // 資源チェック
+            if (gameState.resources[player] < totalCost) {
+                showMessage("資源が不足しています！");
+                return;
+            }
+            
+            // 配置可能チェック
+            if (gameState.board[row][col] !== null) {
+                showMessage("そのマスには配置できません！");
+                return;
+            }
+            
+            if (gameState.territories[row][col] !== player) {
+                showMessage("自領地にのみ配置可能です！初回は拠点に配置してください。");
+                return;
+            }
+            
+            // ユニット配置
+            gameState.board[row][col] = {
+                player: player,
+                type: gameState.selectedUnitType,
+                health: totalCost
+            };
+            
+            gameState.resources[player] -= totalCost;
+            
+            showMessage(`${gameState.selectedUnitType}（体力${totalCost}）を配置しました！`);
+            updateBoard();
+            endTurn();
+        }
+
+        // 移動用ユニット選択
+        function selectUnitForMove(row, col) {
+            const unit = gameState.board[row][col];
+            if (!unit || unit.player !== gameState.currentPlayer) {
+                showMessage("自軍のユニットを選択してください！");
+                return;
+            }
+            
+            gameState.selectedUnit = {row, col};
+            gameState.selectedCell = {row, col};
+            clearHighlights();
+            highlightPossibleMoves(row, col, unit.type);
+            updateActionDescription(`${unit.type}（体力${unit.health}）を選択中。移動先を選択してください`);
+        }
+
+        // 移動・攻撃実行
+        function moveOrAttack(targetRow, targetCol) {
+            const {row: fromRow, col: fromCol} = gameState.selectedUnit;
+            const unit = gameState.board[fromRow][fromCol];
+            const targetUnit = gameState.board[targetRow][targetCol];
+            
+            // 移動可能チェック
+            if (!isValidMove(fromRow, fromCol, targetRow, targetCol, unit.type)) {
+                showMessage("そこには移動できません！");
+                return;
+            }
+            
+            if (!targetUnit) {
+                // 通常移動
+                gameState.board[targetRow][targetCol] = unit;
+                gameState.board[fromRow][fromCol] = null;
+                gameState.territories[targetRow][targetCol] = gameState.currentPlayer;
+                
+                // 勝利判定
+                const enemyBase = gameState.bases[3 - gameState.currentPlayer];
+                if (targetRow === enemyBase.row && targetCol === enemyBase.col) {
+                    showVictory(gameState.currentPlayer);
+                    return;
+                }
+                
+                showMessage("移動完了！");
+                updateBoard();
+                endTurn();
+            } else if (targetUnit.player !== unit.player) {
+                // 敵ユニットへの処理
+                if (unit.health > targetUnit.health) {
+                    // 撃破して移動
+                    gameState.board[targetRow][targetCol] = unit;
+                    gameState.board[fromRow][fromCol] = null;
+                    gameState.territories[targetRow][targetCol] = gameState.currentPlayer;
+                    
+                    // 勝利判定
+                    const enemyBase = gameState.bases[3 - gameState.currentPlayer];
+                    if (targetRow === enemyBase.row && targetCol === enemyBase.col) {
+                        showVictory(gameState.currentPlayer);
+                        return;
+                    }
+                    
+                    showMessage(`敵ユニットを撃破しました！`);
+                } else {
+                    // 攻撃のみ
+                    targetUnit.health -= unit.health;
+                    if (targetUnit.health <= 0) {
+                        gameState.board[targetRow][targetCol] = null;
+                        showMessage(`敵ユニットを破壊しました！`);
+                    } else {
+                        showMessage(`敵ユニットに${unit.health}ダメージ！（残り体力: ${targetUnit.health}）`);
+                    }
+                }
+                updateBoard();
+                endTurn();
+            }
+        }
+
+        // 移動可能判定
+        function isValidMove(fromRow, fromCol, toRow, toCol, unitType) {
+            const dr = toRow - fromRow;
+            const dc = toCol - fromCol;
+            
+            if (fromRow === toRow && fromCol === toCol) return false;
+            
+            switch (unitType) {
+                case 'king':
+                    return Math.abs(dr) <= 1 && Math.abs(dc) <= 1;
+                    
+                case 'rook':
+                    if (dr === 0) {
+                        return Math.abs(dc) <= 2 && !hasObstacle(fromRow, fromCol, toRow, toCol);
+                    } else if (dc === 0) {
+                        return Math.abs(dr) <= 2 && !hasObstacle(fromRow, fromCol, toRow, toCol);
+                    }
+                    return false;
+                    
+                case 'bishop':
+                    if (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) <= 2) {
+                        return !hasObstacle(fromRow, fromCol, toRow, toCol);
+                    }
+                    return false;
+                    
+                case 'knight':
+                    return (Math.abs(dr) === 2 && Math.abs(dc) === 1) || 
+                           (Math.abs(dr) === 1 && Math.abs(dc) === 2);
+                           
+                default:
+                    return false;
+            }
+        }
+
+        // 障害物チェック
+        function hasObstacle(fromRow, fromCol, toRow, toCol) {
+            const dr = Math.sign(toRow - fromRow);
+            const dc = Math.sign(toCol - fromCol);
+            let r = fromRow + dr;
+            let c = fromCol + dc;
+            
+            while (r !== toRow || c !== toCol) {
+                if (gameState.board[r][c] !== null) return true;
+                r += dr;
+                c += dc;
+            }
+            return false;
+        }
+
+        // 可能な移動先をハイライト
+        function highlightPossibleMoves(row, col, unitType) {
+            const moves = getPossibleMoves(row, col, unitType);
+            const unit = gameState.board[row][col];
+            
+            moves.forEach(({r, c}) => {
+                const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                const targetUnit = gameState.board[r][c];
+                
+                if (!targetUnit) {
+                    cell.classList.add('highlight-move');
+                } else if (targetUnit.player !== unit.player && unit.health > targetUnit.health) {
+                    cell.classList.add('highlight-move');
+                } else if (targetUnit.player !== unit.player) {
+                    cell.classList.add('highlight-attack');
+                }
+            });
+        }
+
+        // 可能な移動先を取得
+        function getPossibleMoves(row, col, unitType) {
+            const moves = [];
+            
+            switch (unitType) {
+                case 'king':
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            if (dr === 0 && dc === 0) continue;
+                            const r = row + dr;
+                            const c = col + dc;
+                            if (r >= 0 && r < 5 && c >= 0 && c < 5) {
+                                moves.push({r, c});
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'rook':
+                    for (let d = 1; d <= 2; d++) {
+                        [{r: row+d, c: col}, {r: row-d, c: col}, 
+                         {r: row, c: col+d}, {r: row, c: col-d}].forEach(({r, c}) => {
+                            if (r >= 0 && r < 5 && c >= 0 && c < 5 && 
+                                isValidMove(row, col, r, c, unitType)) {
+                                moves.push({r, c});
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'bishop':
+                    for (let d = 1; d <= 2; d++) {
+                        [{r: row+d, c: col+d}, {r: row+d, c: col-d}, 
+                         {r: row-d, c: col+d}, {r: row-d, c: col-d}].forEach(({r, c}) => {
+                            if (r >= 0 && r < 5 && c >= 0 && c < 5 && 
+                                isValidMove(row, col, r, c, unitType)) {
+                                moves.push({r, c});
+                            }
+                        });
+                    }
+                    break;
+                    
+                case 'knight':
+                    const knightMoves = [
+                        {r: row+2, c: col+1}, {r: row+2, c: col-1},
+                        {r: row-2, c: col+1}, {r: row-2, c: col-1},
+                        {r: row+1, c: col+2}, {r: row+1, c: col-2},
+                        {r: row-1, c: col+2}, {r: row-1, c: col-2}
+                    ];
+                    knightMoves.forEach(({r, c}) => {
+                        if (r >= 0 && r < 5 && c >= 0 && c < 5) {
+                            moves.push({r, c});
+                        }
+                    });
+                    break;
+            }
+            
+            return moves;
+        }
+
+        // 配置可能マスをハイライト
+        function highlightPlaceableCells() {
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (gameState.board[row][col] === null && 
+                        gameState.territories[row][col] === gameState.currentPlayer) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        cell.classList.add('highlight-place');
+                    }
+                }
+            }
+        }
+
+        // ハイライトクリア
+        function clearHighlights() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('highlight-move', 'highlight-attack', 'highlight-place');
+            });
+        }
+
+        // 領地カウント
+        function countTerritory(player) {
+            let count = 0;
+            for (let row = 0; row < 5; row++) {
+                for (let col = 0; col < 5; col++) {
+                    if (gameState.territories[row][col] === player) count++;
+                }
+            }
+            return count;
+        }
+
+        // ターン終了
+        function endTurn() {
+            gameState.currentPlayer = 3 - gameState.currentPlayer;
+            gameState.selectedAction = null;
+            gameState.selectedUnit = null;
+            gameState.selectedUnitType = null;
+            clearHighlights();
+            
+            document.querySelectorAll('.action-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.getElementById('unitSelector').classList.remove('show');
+            
+            updateDisplay();
+            updateActionDescription("アクションを選択してください");
+            showMessage(`プレイヤー${gameState.currentPlayer}の番です。`);
+        }
+
+        // 表示更新
+        function updateDisplay() {
+            // プレイヤー情報更新
+            document.getElementById('player1-resources').textContent = gameState.resources[1];
+            document.getElementById('player2-resources').textContent = gameState.resources[2];
+            document.getElementById('player1-territory').textContent = countTerritory(1);
+            document.getElementById('player2-territory').textContent = countTerritory(2);
+            
+            // アクティブプレイヤー表示
+            document.getElementById('player1-info').classList.toggle('active', gameState.currentPlayer === 1);
+            document.getElementById('player2-info').classList.toggle('active', gameState.currentPlayer === 2);
+            
+            updateBoard();
+        }
+
+        // ボード表示更新
+        function updateBoard() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                const unit = gameState.board[row][col];
+                
+                // 領地表示
+                cell.classList.remove('territory-1', 'territory-2');
+                if (gameState.territories[row][col] > 0) {
+                    cell.classList.add(`territory-${gameState.territories[row][col]}`);
+                }
+                
+                // 拠点の領地表示を確実に
+                if ((row === 0 && col === 2) || (row === 4 && col === 2)) {
+                    const player = row === 0 ? 1 : 2;
+                    if (gameState.territories[row][col] === player) {
+                        cell.classList.add(`territory-${player}`);
+                    }
+                }
+                
+                // ユニット表示
+                const existingUnit = cell.querySelector('.unit');
+                if (existingUnit) existingUnit.remove();
+                
+                if (unit) {
+                    const unitDiv = document.createElement('div');
+                    unitDiv.className = 'unit';
+                    unitDiv.innerHTML = `
+                        ${unitIcons[unit.type]}
+                        <div class="unit-health">${unit.health}</div>
+                    `;
+                    unitDiv.style.color = unit.player === 1 ? '#ff6b6b' : '#4ecdc4';
+                    cell.appendChild(unitDiv);
+                }
+            });
+        }
+
+        // アクション説明更新
+        function updateActionDescription(text) {
+            document.getElementById('actionDescription').textContent = text;
+        }
+
+        // メッセージ表示
+        function showMessage(text) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // 勝利表示
+        function showVictory(player) {
+            const victory = document.createElement('div');
+            victory.className = 'victory-message';
+            victory.innerHTML = `
+                <h1>🎉 勝利！ 🎉</h1>
+                <p>プレイヤー${player}が勝利しました！</p>
+                <button class="new-game-button" onclick="location.reload()">新しいゲーム</button>
+            `;
+            document.body.appendChild(victory);
+        }
+
+        // ゲーム開始
+        initGame();
+    </script>
+</body>
+</html>
