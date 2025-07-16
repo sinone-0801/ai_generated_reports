@@ -1,207 +1,399 @@
-import React from 'react';
-import { 
-  User, 
-  MessageSquare, 
-  Server, 
-  Database, 
-  Bot, 
-  Brain, 
-  Globe,
-  Cpu,
-  MemoryStick,
-  Network,
-  Cloud,
-  ArrowDown,
-  ArrowUp,
-  ArrowRight,
-  ArrowLeft
-} from 'lucide-react';
-
-export default function VirtualWorldFlowchart() {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-xl md:text-3xl font-bold text-center mb-8 md:mb-12 text-gray-800">
-          AIキャラクター仮想世界システム
-        </h1>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIキャラクター仮想世界システム フローチャート</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         
-        <div className="space-y-6 md:space-y-8">
-          {/* エンドユーザー */}
-          <div className="flex justify-center">
-            <div className="group relative transform transition-all duration-300 hover:scale-105 w-full max-w-sm">
-              <div className="bg-white rounded-2xl shadow-xl p-4 md:p-6 flex items-center space-x-3 md:space-x-4 border-2 border-blue-200 hover:border-blue-400">
-                <User className="w-10 h-10 md:w-12 md:h-12 text-blue-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <h3 className="font-bold text-base md:text-lg text-gray-800">エンドユーザー</h3>
-                  <p className="text-xs md:text-sm text-gray-600">システムへのアクセス</p>
-                </div>
-              </div>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom right, #f3e7ff, #e0f2ff);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #374151;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        .flow-item {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 400px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+            transition: transform 0.3s ease;
+        }
+        
+        .flow-item:hover {
+            transform: scale(1.05);
+            border-color: #9ca3af;
+        }
+        
+        .flow-item-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .icon {
+            font-size: 32px;
+            flex-shrink: 0;
+        }
+        
+        .flow-item h3 {
+            font-size: 18px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .flow-item p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .arrow {
+            text-align: center;
+            font-size: 24px;
+            margin: 10px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .user-box {
+            border-color: #dbeafe;
+        }
+        
+        .user-box:hover {
+            border-color: #93c5fd;
+        }
+        
+        .platform-box {
+            border-color: #d1fae5;
+        }
+        
+        .platform-box:hover {
+            border-color: #86efac;
+        }
+        
+        .world-ai-box {
+            background: linear-gradient(to right, #a855f7, #ec4899);
+            border-color: #d8b4fe;
+            color: white;
+        }
+        
+        .world-ai-box h3, .world-ai-box p {
+            color: white;
+        }
+        
+        .ai-characters {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .ai-char-container {
+            text-align: center;
+        }
+        
+        .ai-char {
+            background: linear-gradient(to right, #fb923c, #ef4444);
+            border: 2px solid #fdba74;
+            border-radius: 16px;
+            padding: 15px;
+            color: white;
+            margin-bottom: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .ai-char:hover {
+            transform: scale(1.05);
+        }
+        
+        .memory-db {
+            background: white;
+            border: 2px solid #fef3c7;
+            border-radius: 12px;
+            padding: 10px;
+            font-size: 12px;
+            color: #92400e;
+            margin-top: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .memory-db:hover {
+            transform: scale(1.05);
+        }
+        
+        .mcp-note {
+            text-align: center;
+            color: #ef4444;
+            font-size: 14px;
+            margin: 20px 0;
+        }
+        
+        .info-section {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid #e5e7eb;
+        }
+        
+        .info-section h2 {
+            font-size: 20px;
+            color: #374151;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        @media (min-width: 640px) {
+            h1 {
+                font-size: 32px;
+            }
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .info-item {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .info-item h3 {
+            font-size: 16px;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .info-item p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .double-arrow {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .arrow-down {
+            color: #9ca3af;
+        }
+        
+        .arrow-up {
+            color: #10b981;
+        }
+        
+        .arrow-legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .arrow-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AIキャラクター仮想世界システム</h1>
+        
+        <!-- 矢印の凡例 -->
+        <div class="arrow-legend">
+            <div class="arrow-legend-item">
+                <span style="color: #9ca3af; font-size: 20px;">↓</span>
+                <span style="color: #6b7280;">リクエスト</span>
             </div>
-          </div>
-
-          <div className="flex justify-center">
-            <ArrowDown className="w-6 h-6 md:w-8 md:h-8 text-gray-400 animate-pulse" />
-          </div>
-
-          {/* プラットフォーム */}
-          <div className="flex justify-center">
-            <div className="group relative transform transition-all duration-300 hover:scale-105 w-full max-w-sm">
-              <div className="bg-white rounded-2xl shadow-xl p-4 md:p-6 flex items-center space-x-3 md:space-x-4 border-2 border-green-200 hover:border-green-400">
-                <MessageSquare className="w-10 h-10 md:w-12 md:h-12 text-green-600 flex-shrink-0" />
-                <div className="min-w-0">
-                  <h3 className="font-bold text-base md:text-lg text-gray-800">プラットフォーム</h3>
-                  <p className="text-xs md:text-sm text-gray-600">Discord, LINE, YouTube等</p>
-                </div>
-              </div>
+            <div class="arrow-legend-item">
+                <span style="color: #10b981; font-size: 20px;">↑</span>
+                <span style="color: #6b7280;">レスポンス</span>
             </div>
-          </div>
-
-          <div className="flex justify-center">
-            <ArrowDown className="w-6 h-6 md:w-8 md:h-8 text-gray-400 animate-pulse" />
-          </div>
-
-          {/* 仮想世界管理AIエージェント（中央ハブ） */}
-          <div className="relative">
-            <div className="flex justify-center">
-              <div className="group relative transform transition-all duration-300 hover:scale-105 w-full max-w-md">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl shadow-xl p-6 md:p-8 border-2 border-purple-300">
-                  <div className="flex items-center space-x-3 md:space-x-4">
-                    <Globe className="w-14 h-14 md:w-16 md:h-16 text-white flex-shrink-0" />
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-lg md:text-xl text-white">仮想世界管理AI</h3>
-                      <p className="text-xs md:text-sm text-purple-100">AIキャラクターの世界を統括</p>
-                      <p className="text-xs text-purple-200 mt-1">MCP対応</p>
-                    </div>
-                  </div>
+        </div>
+        
+        <!-- エンドユーザー -->
+        <div class="flow-item user-box">
+            <div class="flow-item-content">
+                <span class="icon">👤</span>
+                <div>
+                    <h3>エンドユーザー</h3>
+                    <p>システムへのアクセス</p>
                 </div>
-              </div>
             </div>
-
-            {/* 仮想世界データベース（横に配置） */}
-            <div className="flex justify-center items-center mt-6 md:mt-8 space-x-4">
-              <div className="hidden md:block">
-                <ArrowRight className="w-8 h-8 text-gray-400" />
-              </div>
-              <div className="md:hidden">
-                <ArrowDown className="w-6 h-6 text-gray-400" />
-              </div>
-              
-              <div className="group relative transform transition-all duration-300 hover:scale-105">
-                <div className="bg-white rounded-2xl shadow-xl p-4 md:p-6 flex items-center space-x-3 md:space-x-4 border-2 border-indigo-200 hover:border-indigo-400">
-                  <Database className="w-10 h-10 md:w-12 md:h-12 text-indigo-600 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-base md:text-lg text-gray-800">仮想世界DB</h3>
-                    <p className="text-xs md:text-sm text-gray-600">世界の状態管理</p>
-                  </div>
+        </div>
+        
+        <div class="double-arrow">
+            <span class="arrow arrow-down">↓</span>
+            <span class="arrow arrow-up">↑</span>
+        </div>
+        
+        <!-- プラットフォーム -->
+        <div class="flow-item platform-box">
+            <div class="flow-item-content">
+                <span class="icon">💬</span>
+                <div>
+                    <h3>プラットフォーム</h3>
+                    <p>Discord, LINE, YouTube等</p>
                 </div>
-              </div>
-              
-              <div className="hidden md:block">
-                <ArrowLeft className="w-8 h-8 text-gray-400" />
-              </div>
-              <div className="md:hidden">
-                <ArrowUp className="w-6 h-6 text-gray-400" />
-              </div>
             </div>
-          </div>
-
-          <div className="flex justify-center">
-            <ArrowDown className="w-6 h-6 md:w-8 md:h-8 text-gray-400 animate-pulse" />
-          </div>
-
-          {/* AIキャラクターエージェント群 */}
-          <div className="space-y-6">
-            <h3 className="text-center font-semibold text-gray-700">AIキャラクターエージェント</h3>
-            <div className="flex flex-wrap justify-center gap-4 md:gap-8">
-              {[1, 2, 3].map((index) => (
-                <div key={index} className="flex flex-col items-center space-y-3">
-                  <div className="group relative transform transition-all duration-300 hover:scale-105">
-                    <div className="bg-gradient-to-r from-orange-400 to-red-400 rounded-2xl shadow-xl p-3 md:p-4 flex flex-col items-center border-2 border-orange-300">
-                      <Bot className="w-8 h-8 md:w-10 md:h-10 text-white mb-1 md:mb-2" />
-                      <h4 className="font-semibold text-sm md:text-base text-white">AIキャラ{index}</h4>
-                    </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center space-y-1">
-                    <ArrowDown className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
-                    <ArrowUp className="w-5 h-5 md:w-6 md:h-6 text-gray-400" />
-                  </div>
-                  
-                  <div className="group relative transform transition-all duration-300 hover:scale-105">
-                    <div className="bg-white rounded-xl shadow-lg p-2 md:p-3 flex flex-col items-center border-2 border-yellow-200">
-                      <Brain className="w-6 h-6 md:w-8 md:h-8 text-yellow-600 mb-1" />
-                      <p className="text-xs text-gray-600">記憶DB</p>
-                    </div>
-                  </div>
+        </div>
+        
+        <div class="double-arrow">
+            <span class="arrow arrow-down">↓</span>
+            <span class="arrow arrow-up">↑</span>
+        </div>
+        
+        <!-- 仮想世界管理AI（データベース含む） -->
+        <div class="flow-item world-ai-box" style="max-width: 500px; padding: 30px;">
+            <div class="flow-item-content">
+                <span class="icon">🌍</span>
+                <div style="flex: 1;">
+                    <h3>仮想世界管理AI</h3>
+                    <p>AIキャラクターの世界を統括</p>
+                    <p style="font-size: 12px; opacity: 0.9;">MCP対応</p>
                 </div>
-              ))}
             </div>
             
-            <div className="text-center">
-              <p className="text-xs md:text-sm text-red-500 font-medium">
-                ↑ MCP経由で仮想世界管理AIと通信 ↑
-              </p>
+            <!-- 内包されるデータベース -->
+            <div style="background: rgba(255, 255, 255, 0.2); border-radius: 12px; padding: 15px; margin-top: 20px; border: 2px solid rgba(255, 255, 255, 0.3);">
+                <div class="flow-item-content">
+                    <span class="icon" style="font-size: 24px;">🗄️</span>
+                    <div>
+                        <h3 style="font-size: 16px; color: white;">仮想世界DB</h3>
+                        <p style="font-size: 12px; color: rgba(255, 255, 255, 0.9);">世界の状態管理</p>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div className="flex justify-center">
-            <div className="flex items-center space-x-2 text-green-500">
-              <ArrowUp className="w-6 h-6 md:w-8 md:h-8 animate-pulse" />
-              <span className="text-xs md:text-sm font-medium">レスポンス</span>
-            </div>
-          </div>
-
-          <div className="text-center text-xs md:text-sm text-gray-600">
-            プラットフォーム経由でユーザーへ返信
-          </div>
         </div>
-
-        {/* 説明セクション */}
-        <div className="mt-12 md:mt-16 bg-white rounded-2xl shadow-xl p-6 md:p-8 border-2 border-gray-200">
-          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-800 flex items-center">
-            <Cpu className="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-3 text-purple-600" />
-            システム概要
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-            <div className="flex items-start space-x-3">
-              <Cloud className="w-5 h-5 md:w-6 md:h-6 text-blue-500 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-sm md:text-base text-gray-800 mb-1">仮想世界の共有</h3>
-                <p className="text-xs md:text-sm text-gray-600">
-                  複数のAIキャラクターが同一の仮想世界で活動し、相互作用が可能
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <MemoryStick className="w-5 h-5 md:w-6 md:h-6 text-orange-500 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-sm md:text-base text-gray-800 mb-1">個別記憶システム</h3>
-                <p className="text-xs md:text-sm text-gray-600">
-                  各AIキャラクターが独自の記憶・経験を蓄積
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <Server className="w-5 h-5 md:w-6 md:h-6 text-green-500 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-sm md:text-base text-gray-800 mb-1">統合管理システム</h3>
-                <p className="text-xs md:text-sm text-gray-600">
-                  仮想世界の一貫性を保ちながら、各キャラクターの個性を維持
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start space-x-3">
-              <Network className="w-5 h-5 md:w-6 md:h-6 text-teal-500 mt-1 flex-shrink-0" />
-              <div>
-                <h3 className="font-semibold text-sm md:text-base text-gray-800 mb-1">MCP対応</h3>
-                <p className="text-xs md:text-sm text-gray-600">
-                  ModelContextProtocolによる効率的なコンテキスト管理
-                </p>
-              </div>
-            </div>
-          </div>
+        
+        <div class="double-arrow">
+            <span class="arrow arrow-down">↓</span>
+            <span class="arrow arrow-up">↑</span>
         </div>
-      </div>
+        
+        <!-- AIキャラクター群 -->
+        <div class="ai-characters">
+            <div class="ai-char-container">
+                <div class="ai-char">
+                    <div class="icon">🤖</div>
+                    <div>AIキャラ1</div>
+                </div>
+                <div class="double-arrow" style="margin: 5px 0;">
+                    <span class="arrow arrow-down" style="font-size: 16px;">↓</span>
+                    <span class="arrow arrow-up" style="font-size: 16px;">↑</span>
+                </div>
+                <div class="memory-db">
+                    <div>🧠 記憶DB</div>
+                </div>
+            </div>
+            
+            <div class="ai-char-container">
+                <div class="ai-char">
+                    <div class="icon">🤖</div>
+                    <div>AIキャラ2</div>
+                </div>
+                <div class="double-arrow" style="margin: 5px 0;">
+                    <span class="arrow arrow-down" style="font-size: 16px;">↓</span>
+                    <span class="arrow arrow-up" style="font-size: 16px;">↑</span>
+                </div>
+                <div class="memory-db">
+                    <div>🧠 記憶DB</div>
+                </div>
+            </div>
+            
+            <div class="ai-char-container">
+                <div class="ai-char">
+                    <div class="icon">🤖</div>
+                    <div>AIキャラ3</div>
+                </div>
+                <div class="double-arrow" style="margin: 5px 0;">
+                    <span class="arrow arrow-down" style="font-size: 16px;">↓</span>
+                    <span class="arrow arrow-up" style="font-size: 16px;">↑</span>
+                </div>
+                <div class="memory-db">
+                    <div>🧠 記憶DB</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mcp-note">
+            <span class="arrow-up">↑</span> MCP経由で仮想世界管理AIと通信 <span class="arrow-up">↑</span>
+        </div>
+        
+        <!-- 説明セクション -->
+        <div class="info-section">
+            <h2>
+                <span>⚙️</span>
+                システム概要
+            </h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span style="font-size: 20px;">☁️</span>
+                    <div>
+                        <h3>仮想世界の共有</h3>
+                        <p>複数のAIキャラクターが同一の仮想世界で活動し、相互作用が可能</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span style="font-size: 20px;">💾</span>
+                    <div>
+                        <h3>個別記憶システム</h3>
+                        <p>各AIキャラクターが独自の記憶・経験を蓄積</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span style="font-size: 20px;">🖥️</span>
+                    <div>
+                        <h3>統合管理システム</h3>
+                        <p>仮想世界の一貫性を保ちながら、各キャラクターの個性を維持</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span style="font-size: 20px;">🔗</span>
+                    <div>
+                        <h3>MCP対応</h3>
+                        <p>ModelContextProtocolによる効率的なコンテキスト管理</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-  );
-}
+</body>
+</html>
